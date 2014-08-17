@@ -1,0 +1,60 @@
+INCLUDE DE TOOODO
+#include <bits/stdc++.h>
+
+UNORDERED SET/MAP
+struct my_hash {
+size_t operator() (const T &x) const { return hashear(x); }
+};
+
+unordered_set<X,my_hash>
+unordered_map<X,Y,my_hash>
+
+COMPARACIONES PARAMETRIZADAS
+bool cmp(T x, T y) {}
+struct comp { bool operator()(T x, T y) {} };
+
+priority_queue<T,vector<T>,comp>
+set<T,comp>
+sort(all(v<T>),comp()) o sort(all(v<T>),cmp)
+
+
+EXPANDIR STACK
+#include <sys/resource.h>
+void expandStack() {
+	struct rlimit rl;
+	getrlimit(RLIMIT_STACK, &rl);
+	rl.rlim_cur = rl.rlim_max;
+	setrlimit(RLIMIT_STACK, &rl);
+}
+
+
+Para limites numericos de cualquier cosa:
+#include <limits>
+numeric_limits<T>
+	::max()
+	::min()
+	::infinity()
+	::max_exponent
+	::has_infinity
+
+IOMANIP
+flags (cada uno puede ir precedido de no)
+  salida: showpos, uppercase, unitbuf
+  entrada: skipws, ws
+
+bases: hex, dec, oct
+punto flotante: setprecion(p), fixed, scientific
+flushers: endl, flush
+setters: setbase, setfill, setprecision, setw
+mascaras: setf/unsetf(mask), las mascaras estan en ios_base::
+
+Para acelerar I/O: ios_base::sync_with_stdio(0);
+
+BUILTIN FUNCTIONS
+__builtin_ctz, __builtin_clz, __builtin_popcount 
+atan2(y,x)
+hypot(x,y)
+
+SUPER TINT
+typedef bint __int128 (o su version unsigned)
+
