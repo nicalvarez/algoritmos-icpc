@@ -77,12 +77,16 @@ struct treap {
 
     pnode merge(pnode o) { root = merge(root, o); }
 
-    void insertKey(int key) {
-        pnode elem = new node(key,rand());
-        pnode t1,t2; splitKey(root, key, t1, t2);
-        merge(t1,t1,elem);
-        merge(root,t1,t2);
+    void insertKey(pnode &t, pnode elem) {
+        if (!t) return void(t = elem);
+        if (elem->key < t->key) return insertKey(t->l, elem);
+        insertKey(t->r, elem);
     }
+
+    void insertKey(int key) {
+        pnode elem = new node(key, rand());
+        insertKey(root, elem);
+    } 
 
     void insertPos(int pos, int key) {
         pnode elem = new node(key, rand());
