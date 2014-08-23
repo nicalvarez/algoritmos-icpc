@@ -3,14 +3,26 @@ using namespace std;
 
 typedef struct node *pnode;
 typedef pair<pnode,pnode> pnn;
+typedef long long tint;
 
 struct node {
     int key, prior, size;
     pnode l,r;
 
+    tint sum;
+
     node() {} 
-    node(int key, int prior): key(key), prior(prior), size(1), l(0), r(0) {}
+    node(int key, int prior): key(key), prior(prior), sum(key), size(1), l(0), r(0) {}
 };
+
+ostream &operator<<(ostream &out, pnode t) {
+    if (!t) return out;
+    out << (t->l);
+    out << t->key << ' ';
+    out << (t->r);
+    return out;
+}
+
 
 struct treap {
     pnode root;
@@ -19,6 +31,7 @@ struct treap {
 
     int size(pnode p) { return p ? p->size : 0; }
     int size() { return size(root); }
+    tint sum(pnode p) { return p ? p->sum : 0; }
 
     // Propagate delta to children
     void push(pnode p) {
@@ -32,6 +45,7 @@ struct treap {
         if (!p) return;
 
         p->size = 1 + size(p->l) + size(p->r);
+        p->sum = p->key + sum(p->l) + sum(p->r);
         // update function and delta
     }  
 
@@ -60,12 +74,22 @@ struct treap {
     pnn splitSize(int sz) {
         pnn res;
         splitSize(root, sz, res.first, res.second);
+        return res;
+    }
+
+    tint sum(int k) {
+        pnn sp = splitSize(k);
+        tint res = sum(sp.first);
+        //D(sp.first);
+        //cerr << sp.first << endl; 
+        merge(root, sp.first, sp.second);
+        return res;
     }
 
     void merge(pnode &t, pnode l, pnode r) {
+        if (!l || !r) return void(t = l ? l : r);
         push(l); push(r);
-        if (!l || !r) t = l ? l : r;
-        else if (l->prior < r->prior) merge(l->r, l->r, r), t = l;
+        if (l->prior < r->prior) merge(l->r, l->r, r), t = l;
         else merge(r->l, l, r->l), t = r; 
         pull(t);
     }
@@ -77,17 +101,28 @@ struct treap {
 
     pnode merge(pnode o) { root = merge(root, o); }
 
-    void insertKey(pnode &t, pnode elem) {
-        if (!t) return void(t = elem);
-        push(t);
-        if (elem->key < t->key) return insertKey(t->l, elem);
-        insertKey(t->r, elem);
-        pull(t);
-    }
+    //void insertKey(pnode &t, pnode elem) {
+        //if (!t) return void(t = elem);
+        //if (elem->prior < t->prior) {
+            //pnode t1,t2; splitKey(t, elem->key, t1, t2);
+            //elem->l = t1;
+            //elem->r = t2;
+            //t = elem;
+            //pull(t);
+            //return;
+        //}
+        //push(t);
+        //if (elem->key < t->key) insertKey(t->l, elem);
+        //else insertKey(t->r, elem);
+        //pull(t);
+    //}
 
     void insertKey(int key) {
         pnode elem = new node(key, rand());
-        insertKey(root, elem);
+        pnode t1, t2; splitKey(root, key, t1, t2);
+        merge(t1,t1,elem);
+        merge(root,t1,t2);
+        //insertKey(root, elem);
     } 
 
     void insertPos(int pos, int key) {
@@ -150,13 +185,6 @@ struct treap {
     }
 };
 
-ostream &operator<<(ostream &out, pnode t) {
-    if (!t) return out;
-    out << (t->l);
-    out << t->key << ' ';
-    out << (t->r);
-    return out;
-}
 
 ostream& operator<<(ostream &out, const treap &t) {
     return (out << t.root);
