@@ -79,8 +79,10 @@ struct treap {
 
     void insertKey(pnode &t, pnode elem) {
         if (!t) return void(t = elem);
+        push(t);
         if (elem->key < t->key) return insertKey(t->l, elem);
         insertKey(t->r, elem);
+        pull(t);
     }
 
     void insertKey(int key) {
@@ -121,9 +123,11 @@ struct treap {
 
     void eraseKey(pnode &t, int key) {
         if (!t) return;
+        push(t);
         if (key == t->key) merge(t,t->l, t->r);
         else if (key < t->key) eraseKey(t->l, key);
         else eraseKey(t->r, key);
+        pull(t);
     }
 
     void eraseKey(int key) {
