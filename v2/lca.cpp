@@ -49,4 +49,45 @@ int lca(int u, int v) {
 	return pre[u][0];
 }
 
+/*
+const int MAXN = 1e5, MAXK = 20;
+int h[2*MAXN], lvl[MAXN];
+
+int t = 0, d[MAXN];
+void dfs(int u, int p, int l) {
+    d[u] = t; h[t++] = l;
+    lvl[u] = l;
+    for (int v : adj[u]) if (v != p) {
+        dfs(v,u,l+1);
+        h[t++] = l;
+    }
+}
+int st[MAXK][MAXN];
+
+void initRMQ() {
+    forn(i,2*n) st[0][i] = h[i];
+    for (int k = 1; (1<<k) <= 2*n; k++) {
+        forn(i,2*n - (1<<k)) st[k][i] = min(st[k-1][i], st[k-1][i+(1<<(k-1))]);
+    }
+}
+
+int rmq(int i, int j) {
+    int len = j-i+1;
+    int pot = 31 - __builtin_clz(len);
+    return min(st[pot][i], st[pot][j-(1<<pot)+1]);
+}
+
+int lcaDist(int u, int v) {
+    return lvl[u] + lvl[v] - 2*rmq(min(d[u],d[v]), max(d[u],d[v]));
+}
+
+int query(int u) {
+    int ans = res[u];
+    for (int v : upd) {
+        ans = min(ans, lcaDist(u,v));
+    }
+    return ans;
+}
+ */
+
 int main() {}

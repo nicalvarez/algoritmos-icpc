@@ -8,11 +8,6 @@ using namespace std;
  *      - Implementar multiplicacion (lenta y rápida (fft))
  *      - Horner's Rule (creo)... evaluar el polinomio de manera piola, bah
  *
- *
- *
- *
- *
- *
  */
 struct poly {
     vector<double> c;
