@@ -38,8 +38,8 @@ typedef vector<vi> vvi;
 typedef pair<int,int> pii;
 
 
+const int INF = 1e9;
 struct maxflow {
-	static const int INF = 1<<29;
 
 	struct edge {
 		int u, v, cap, flow;
