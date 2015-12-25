@@ -1,4 +1,22 @@
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <numeric>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <list>
+#include <set>
+#include <map>
+#include <cstdio>
+#include <cstdlib>
+#include <cctype>
+#include <cmath>
+#include <complex>
+
 using namespace std;
 
 
@@ -187,6 +205,7 @@ struct line {
     line(const point<double> &p, double angle) {
         point<double> d(cos(angle), sin(angle));
         n = (point<double>){-d.y, d.x};
+        c = n*p;
     }
 
     void normalize() {
@@ -279,6 +298,60 @@ struct segment {
 
     segment(const point<T> &p, const point<T> &q): p(p), q(q), l(p,q) {}
 
+};
+
+template <class T>
+double triangleInequality(T a, T b, T c) {
+    T sum = a+b+c;
+    T mx = max(max(a,b),c);
+    return 2*mx - sum;
+}
+
+template <class T>
+struct circle {
+    point<T> o;
+    T r;
+
+    vector<point<double>> inter(const line<T> &l) const {
+        double a = l.n.x, b = l.n.y, c = l.c;
+        c -= a*o.x + b*o.y;
+
+        double norm = sqrt(a*a + b*b);
+        a /= norm; b /= norm; c /= norm;
+
+        vector<point<double>> res;
+        double disc = r*r - c*c;
+        if (disc < 0) return res;
+        if (disc > 0) {
+            disc = sqrt(disc);
+            res.push_back((point<double>){o.x + a*c + b*disc, o.y + b*c - a*disc});
+            res.push_back((point<double>){o.x + a*c - b*disc, o.y + b*c + a*disc});
+            return res;
+        }
+        res.push_back((point<double>){o.x + a*c, o.y + b*c});
+        return res;
+    }
+
+    vector<point<double>> inter(const circle &c) const {
+        vector<point<double>> res;
+
+        double r1 = r, r2 = c.r, d = (c.o - o).len();
+        if (d < EPS) return res;
+        double ineq = triangleInequality(r1,r2,d);
+        if (ineq < -EPS) { // 2 points
+            point<T> dir = (c.o - o).normalize();
+            double eq1 = d, eq2 = (r1*r1 - r2*r2) / d;
+            double x = (eq1+eq2)/2;
+            point<double> p = o + dir*x;
+            return inter(line<double>(o,c.o).perpendicular(p));
+        }
+        else if (ineq < EPS) { // 1 point
+            point<T> dir = (c.o - o).normalize();
+            res.push_back(o+dir*r);
+            return res;
+        }
+        return res;
+    }
 };
 
 
