@@ -15,8 +15,8 @@ typedef long long int ll;
 typedef vector<int> vi;
 typedef pair<int,int> pii;
 
-// Acordarse de hacer rng.seed(time(0))
 mt19937 rng;
+#define hash __nico_hash
 struct hashing {
     int mod, mul;
 
@@ -31,9 +31,24 @@ struct hashing {
     }
 
     void randomize() {
+        rng.seed(time(0));
         mod = uniform_int_distribution<>(0, (int) 5e8)(rng) + 1e9;
         while (!prime(mod)) mod++;
         mul = uniform_int_distribution<>(2,mod-2)(rng);
+    }
+
+    vi h, pot;
+    void process(const string &s) {
+        h.resize(si(s)+1);
+        pot.resize(si(s)+1);
+        h[0] = 0; forn(i,si(s)) h[i+1] = (((ll)h[i] * mul) + s[i]) % mod;
+        pot[0] = 1; forn(i,si(s)) pot[i+1] = (ll) pot[i] * mul % mod;
+    }
+
+    int hash(int i, int j) {
+        int res = h[j] - (ll) h[i] * pot[j-i] % mod;
+        if (res < 0) res += mod;
+        return res;
     }
 
     int hash(const string &s) {
@@ -41,27 +56,9 @@ struct hashing {
         for (char c : s) res = (res * (ll) mul + c) % mod;
         return res;
     }
+
 };
 
-
-const int M = 1e6 + 10;
-const int MOD = 1e9 + 7;
-
-int n,m, fact[M];
-string id[M]
 hashing h1,h2;
 
-int main() {
-    fact[0] = 1; forsn(n,1,M) fact[n] = (ll) fact[n-1] * n % MOD;
-
-    scanf("%d %d", &n, &m);
-    while (n--) {
-        int k; scanf("%d", &k);
-        while (k--) {
-            int x; scanf("%d", &x);
-
-        }
-    }
-
-    return 0;
-}
+int main() { }
