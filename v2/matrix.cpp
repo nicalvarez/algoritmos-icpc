@@ -44,6 +44,48 @@ double determinant(vector<vector<double>> a) {
     return det;
 }
 
+typedef vector<double> vd;
+typedef vector<vd> vvd;
+
+vvd inverse(vvd a) {
+    static const double EPS = 1e-9;
+    int n = si(a);
+    vvd res(n,vd(n));
+    forn(i,n) res[i][i] = 1;
+
+    forn(col,n) {
+        int pick = col;
+        forsn(i,pick+1,n) if (fabs(a[i][col]) > fabs(a[pick][col])) pick = i;
+        if (fabs(a[pick][col]) < EPS) return vvd();
+
+        if (pick != col) {
+            swap(a[col], a[pick]);
+            swap(res[col], res[pick]);
+        }
+
+        double c = a[col][col];
+        forn(j,n) {
+            a[col][j] /= c;
+            res[col][j] /= c;
+        }
+        forn(i,n) if (i != col) {
+            double c = a[i][col];
+            forn(j,n) {
+                a[i][j] -= c * a[col][j];
+                res[i][j] -= c * res[col][j];
+            }
+        }
+    }
+    return res;
+}
+
+vvd operator*(vvd a, vvd b) {
+    int x = si(a), y = si(a[0]), z = si(b[0]);
+    vvd res(x,vd(z));
+    forn(i,x) forn(k,y) forn(j,z) res[i][j] += a[i][k] * b[k][j];
+    return res;
+}
+
 const int MOD = 1e9 + 7;
 int expomod(ll a, ll e) {
     ll res = 1;
@@ -85,9 +127,26 @@ int determinant(vector<vi> a) {
     return det;
 }
 
+void print(vvd a) {
+    int n = si(a), m = si(a[0]);
+    forn(i,n) { forn(j,m) cerr << a[i][j] << ' '; cerr << endl; }
+}
+
 
 int main() {
     ios_base::sync_with_stdio(false); cin.tie(0); cout.tie(0);
+
+    vvd mat = {{10, -9, -12}, {7, -12, 11}, {-10, 10, 3}};
+    print(mat); cerr << "--------------------" << endl;
+
+    auto inv = inverse(mat);
+    forn(i,3) forn(j,3) inv[i][j] *= 319;
+
+    print(inv); cerr << "--------------------" << endl;
+    
+
+
+
 
     return 0;
 }
