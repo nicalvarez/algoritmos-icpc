@@ -49,6 +49,8 @@ namespace aho {
                 t[v].link = 0;
             else
                 t[v].link = go (get_link (t[v].p), t[v].pch);
+        // Llamar get_link con todos los nodos si quiero tener los leaf bien
+        // t[v].leaf |= t[t[v].link].leaf;
         return t[v].link;
     }
 
