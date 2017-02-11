@@ -49,6 +49,11 @@ namespace aho {
                 t[v].link = 0;
             else
                 t[v].link = go (get_link (t[v].p), t[v].pch);
+        // Llamar get_link con todos los nodos si quiero tener los leaf bien
+        // O usar output-link: link al sufijo propio más largo que es pattern
+        // Tambien es buena idea usar campo id = -1 (si no es terminal) id = nro pattern
+        // t[v].leaf |= t[t[v].link].leaf;
+        
         return t[v].link;
     }
 
