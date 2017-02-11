@@ -127,6 +127,32 @@ int determinant(vector<vi> a) {
     return det;
 }
 
+void gauss(vector<vi> &a) {
+    int n = si(a), m = si(a[0]);
+    forn(i,n) forn(j,m) {
+        a[i][j] %= MOD; 
+        if (a[i][j] < 0) a[i][j] += MOD;
+    }
+
+    forn(i,m-1) {
+        int k = i;
+        forsn(j,i,n) if (a[j][i]) {
+            k = j;
+            break;
+        }
+        if (!a[k][i]) continue;
+
+        swap(a[i], a[k]);
+        //if (i != k && det) det = MOD-det;
+
+        int inv = inverse(a[i][i]);
+            //::inv[a[i][i]];
+        forsn(j,i,m) mult(a[i][j], inv);
+        forn(j,n) if (j != i && a[j][i])
+            dforsn(k,0,m) sub(a[j][k], a[i][k] * a[j][i] % MOD);
+    }
+}
+
 void print(vvd a) {
     int n = si(a), m = si(a[0]);
     forn(i,n) { forn(j,m) cerr << a[i][j] << ' '; cerr << endl; }
