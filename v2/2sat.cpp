@@ -1,3 +1,6 @@
+#include <bits/stdc++.h>
+using namespace std;
+
 int n;
 vector < vector<int> > g, gt;
 vector<bool> used;
@@ -23,7 +26,8 @@ void dfs2 (int v, int cl) {
 }
 
 int main() {
-	... чтение n, графа g, построение графа gt ...
+	// leer el grafo en n, g, gt
+    // literal i = 2*i, literal ~i = 2*i+1
 
 	used.assign (n, false);
 	for (int i=0; i<n; ++i)
@@ -42,9 +46,8 @@ int main() {
 			puts ("NO SOLUTION");
 			return 0;
 		}
-	for (int i=0; i<n; ++i) {
-		int ans = comp[i] > comp[i^1] ? i : i^1;
-		printf ("%d ", ans);
-	}
+    vector<int> ans;
+	for (int i=0; i<n; ++i) ans[i] = comp[i] > comp[i^1];
 
+    return 0;
 }
