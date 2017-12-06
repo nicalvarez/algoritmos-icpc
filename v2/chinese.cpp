@@ -31,6 +31,34 @@ tint inverse(tint x, tint m) {
 	return (res % m + m) % m;
 }
 
+// m must be positive
+template<typename T>
+static T mod(T a, T m)
+{
+    a %= m;
+    if (a < 0)
+        a += m;
+    return a;
+}
+
+// a must be relatively prime to m
+template<typename T>
+static T inverse(T a, T m)
+{
+    a = mod(a, m);
+    if (a <= 1)
+        return a;
+    return mod((1 - inverse(m, a) * m) / a, m);
+}
+
+typedef long long ll;
+int inverse(int a, int m) {
+    if (a <= 1) return a;
+    int ans = (1 - (ll) inverse(m%a,a)*m)/a;
+    if (ans < 0) ans += m;
+    return ans;
+}
+
 tint chinese(int n, tint r[], tint m[]) {
 	tint M = 1;
 	forn(i,n) M *= m[i];
