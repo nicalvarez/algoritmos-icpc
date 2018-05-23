@@ -23,34 +23,33 @@ template<int MAXN>
 struct dinic {
 
     struct edge {
-        int c,f;
+        int u,v,c,f;
         int r() { return c-f; }
     };
 
     static const int INF = 1e9;
 
     int N,S,T;
-    edge red[MAXN][MAXN];
+    vector<edge> e;
+    //edge red[MAXN][MAXN];
     vi adjG[MAXN];
 
     void reset() {
-        forn(u,N) forn(i,si(adjG[u])) {
-            int v = adjG[u][i];
-            red[u][v].f = 0;
+        forn(u,N) for (auto ind : adjG[u]) {
+            auto &ei = e[ind];
+            ei.f = 0;
         }
     }
 
     void initGraph(int n, int s, int t) {
         N = n; S = s; T = t;
-        forn(u,N) {
-            adjG[u].clear();
-            forn(v,N) red[u][v] = (edge){0,0};
-        }
+        e.clear();
+        forn(u,N) adjG[u].clear();
     }
 
     void addEdge(int u, int v, int c) {
-        if (!red[u][v].c && !red[v][u].c) { adjG[u].pb(v); adjG[v].pb(u); }
-        red[u][v].c += c;
+        adjG[u].pb(si(e)); e.pb((edge){u,v,c,0});
+        adjG[v].pb(si(e)); e.pb((edge){v,u,0,0});
     }
 
     int dist[MAXN];
@@ -59,9 +58,11 @@ struct dinic {
         queue<int> q; q.push(S); dist[S] = 0;
         while (!q.empty()) {
             int u = q.front(); q.pop();
-            forn(i,si(adjG[u])) {
-                int v = adjG[u][i];
-                if (dist[v] < INF || red[u][v].r() == 0) continue;
+            for (auto ind : adjG[u]) {
+            //forn(i,si(adjG[u])) {
+                auto &ei = e[ind];
+                int v = ei.v;
+                if (dist[v] < INF || ei.r() == 0) continue;
                 dist[v] = dist[u] + 1;
                 q.push(v);
             }
@@ -73,11 +74,12 @@ struct dinic {
         if (u == T) return cap;
 
         int res = 0;
-        forn(i,si(adjG[u])) {
-            int v = adjG[u][i];
-            if (red[u][v].r() && dist[v] == dist[u] + 1) {
-                int send = dinic_dfs(v,min(cap,red[u][v].r()));
-                red[u][v].f += send; red[v][u].f -= send;
+        for (auto ind : adjG[u]) {
+            auto &ei = e[ind], &ej = e[ind^1];
+            int v = ei.v;
+            if (ei.r() && dist[v] == dist[u] + 1) {
+                int send = dinic_dfs(v,min(cap, ei.r()));
+                ei.f += send; ej.f -= send;
                 res += send; cap -= send;
                 if (cap == 0) break;
             }
@@ -91,7 +93,24 @@ struct dinic {
         while (dinic_bfs()) res += dinic_dfs(S,INF);
         return res;
     }
+
+    vi cut() {
+        dinic_bfs();
+        vi ans;
+        for (auto u : adjG[S]) if (dist[e[u].v] == INF) ans.pb(e[u].v);
+        for (auto u : adjG[T]) if (dist[e[u].v] < INF) ans.pb(e[u].v);
+        return ans;
+    }
+
+    vi indep() {
+        dinic_bfs();
+        vi ans;
+        for (auto u : adjG[S]) if (dist[e[u].v] < INF) ans.pb(e[u].v);
+        for (auto u : adjG[T]) if (dist[e[u].v] == INF) ans.pb(e[u].v);
+        return ans;
+    }
 };
+
 
 int main() {
 }
