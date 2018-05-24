@@ -59,7 +59,6 @@ struct dinic {
         while (!q.empty()) {
             int u = q.front(); q.pop();
             for (auto ind : adjG[u]) {
-            //forn(i,si(adjG[u])) {
                 auto &ei = e[ind];
                 int v = ei.v;
                 if (dist[v] < INF || ei.r() == 0) continue;
