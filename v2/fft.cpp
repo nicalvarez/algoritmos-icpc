@@ -141,12 +141,13 @@ namespace fft {
         return c;
     }
 
+    const double PI = acos(-1);
     typedef complex<double> comp;
     vector<comp> multiply(vector<comp> a, vector<comp> b) {
         int n = si(a), m = si(b);
         int sz = 1; while (sz < n+m) sz *= 2;
         a.resize(sz); b.resize(sz);
-        auto w = exp(comp(0,2*M_PI/sz));
+        auto w = exp(comp(0,2*PI/sz));
         return _mult(a,b,w);
     }
 
@@ -160,6 +161,15 @@ namespace fft {
     }
 }
 
+/*
+    Times:
+        product: 60 ms
+        inverse: 220 ms
+        log: 250 ms
+        sqrt: 400 ms
+        exp: 650 ms
+        power: 900 ms
+*/
 template<class T>
 struct series {
 
@@ -256,8 +266,8 @@ struct series {
                     a_cap.a.pb(a[sz]);
                 sz++;
             }
-            ans = (ans*ans + a_cap) * (2*ans).inverse(sz);
-            while (si(ans.a) > sz) ans.a.pop_back();
+            ans = T(1)/2 * (ans + a_cap * ans.inverse(sz)).cap(sz);
+            if (si(ans.a) > sz) ans.a.resize(sz);
         }
         return ans;
     }
@@ -310,8 +320,6 @@ int main() {
 
     vi a = {1,5,7,-1,5};
     vi b = {4,7,17};
-    a = b;
-    a = {1,-1};
     vi c(si(a)+si(b));
     forn(i,si(a)) forn(j,si(b)) c[i+j] += a[i]*b[j];
     for (auto x : c) cerr << real(x) << ' '; cerr << endl;
@@ -396,6 +404,9 @@ int main() {
         auto l = s.power(sz,1e9 + 7);
         //auto l = s.exp(sz);
         cerr << "log: "; forn(i,32) cerr << l.a[i] << ' '; cerr << endl;
+
+//        auto raiz = l.sqrt(sz,1);
+//        cerr << "sqrt: "; forn(i,32) cerr << raiz.a[i] << ' '; cerr << endl;
 
         //auto e = s.power(sz,10);
         //cerr << "comb(10,*): "; forn(i,32) cerr << e.a[i] << ' '; cerr << endl;
