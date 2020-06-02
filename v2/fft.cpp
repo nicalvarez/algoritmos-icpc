@@ -154,6 +154,13 @@ namespace fft {
     template<class M>
     vector<M> multiply(vector<M> a, vector<M> b) {
         int n = si(a), m = si(b);
+        if (min(m,n) < 50) {
+            vector<M> c(n+m-1);
+            forn(i,n) forn(j,m) {
+                c[i+j] += a[i]*b[j];
+            }
+            return c;
+        }
         int sz = 1; while (sz < n+m) sz *= 2;
         a.resize(sz); b.resize(sz);
         auto w = M(M::root) ^ ((M::MOD-1) / sz);
@@ -162,7 +169,7 @@ namespace fft {
 }
 
 /*
-    Times:
+    Times for n = 2^17
         product: 60 ms
         inverse: 220 ms
         log: 250 ms
@@ -228,6 +235,7 @@ struct series {
         for (int i = 1; i <= sz; i++) {
             ans.a[i-1] = T(i) * a[i];
         }
+        if (sz == 0) ans.a.resize(1);
         return ans;
     }
 
@@ -386,8 +394,11 @@ int main() {
         auto l = s.inverse(sz).log(sz);
         cerr << "log: "; forn(i,sz) cerr << real(l.a[i])*i << ' '; cerr << endl;
 
+        series<mod<MOD>> one = {1};
+        D(one);
+        D(one.log(2));
     }
-    if (false) {
+    if (true) {
         int sz = 32;
         vector<mod<MOD>> fact(sz);
         fact[0] = 1;
@@ -405,14 +416,14 @@ int main() {
         //auto l = s.exp(sz);
         cerr << "log: "; forn(i,32) cerr << l.a[i] << ' '; cerr << endl;
 
-//        auto raiz = l.sqrt(sz,1);
-//        cerr << "sqrt: "; forn(i,32) cerr << raiz.a[i] << ' '; cerr << endl;
+        auto raiz = l.sqrt(sz,1);
+        cerr << "sqrt: "; forn(i,32) cerr << raiz.a[i] << ' '; cerr << endl;
 
         //auto e = s.power(sz,10);
         //cerr << "comb(10,*): "; forn(i,32) cerr << e.a[i] << ' '; cerr << endl;
 
-        //auto e2 = e.inverse(sz);
-        //cerr << "e2: "; forn(i,32) cerr << e2.a[i] << ' '; cerr << endl;
+        auto e2 = l.inverse(sz);
+        cerr << "e2: "; forn(i,32) cerr << e2.a[i] << ' '; cerr << endl;
 
         //auto square = e*e;
         //cerr << "square: "; forn(i,32) cerr << square.a[i] << ' '; cerr << endl;
