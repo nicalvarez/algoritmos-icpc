@@ -136,9 +136,8 @@ namespace fft {
     vector<T> _mult(vector<T> a, vector<T> b, T w) {
         auto ta = fft(a, w, 0);
         auto tb = fft(b, w, 0);
-        vector<T> tc(si(a));
-        forn(i,si(a)) tc[i] = ta[i] * tb[i];
-        auto c = fft(tc, w, 1);
+        forn(i,si(a)) ta[i] *= tb[i];
+        auto c = fft(ta, w, 1);
         return c;
     }
 
@@ -156,7 +155,7 @@ namespace fft {
         int n = si(a), m = si(b);
         int sz = 1; while (sz < n+m) sz *= 2;
         a.resize(sz); b.resize(sz);
-        auto w = M(M::root) ^ (M::MOD / sz);
+        auto w = M(M::root) ^ ((M::MOD-1) / sz);
         return _mult(a,b,w);
     }
 }
@@ -212,19 +211,21 @@ struct series {
         return p;
     }
 
-    series derivative() {
+    series derivative(int n) {
         series ans;
-        ans.a.resize(si(a)-1);
-        for (int i = 1; i < si(a); i++) {
+        int sz = min(n, si(a)-1);
+        ans.a.resize(sz);
+        for (int i = 1; i <= sz; i++) {
             ans.a[i-1] = T(i) * a[i];
         }
         return ans;
     }
 
-    series integral() {
+    series integral(int n) {
         series ans;
-        ans.a.resize(si(a)+1);
-        forn(i,si(a)) ans.a[i+1] = a[i] / T(i+1);
+        int sz = min(n, si(a)+1);
+        ans.a.resize(n);
+        forn(i,n-1) ans.a[i+1] = a[i] / T(i+1);
         return ans;
     }
 
@@ -240,7 +241,7 @@ struct series {
                 sz++;
             }
             ans *= series(2) - (a_cap * ans).cap(sz);
-            while (si(ans.a) > sz) ans.a.pop_back();
+            if (si(ans.a) > sz) ans.a.resize(sz);
         }
         return ans;
     }
@@ -263,8 +264,8 @@ struct series {
 
     // a[0] should be 1
     series log(int n) {
-        auto ans = (this->derivative() * this->inverse(n)).integral();
-        while (si(ans.a) > n) ans.a.pop_back();
+        auto ans = (this->derivative(n) * this->inverse(n)).integral(n);
+        if (si(ans.a) > n) ans.a.resize(n);
         return ans;
     }
 
@@ -279,8 +280,8 @@ struct series {
                     a_cap.a.pb(a[sz]);
                 sz++;
             }
-            ans = ans * (series(1) + a_cap - ans.log(sz));
-            while (si(ans.a) > sz) ans.a.pop_back();
+            ans *= series(1) + a_cap - ans.log(sz);
+            if (si(ans.a) > sz) ans.a.resize(sz);
         }
         return ans;
     }
@@ -392,15 +393,18 @@ int main() {
     {
         int sz = 1<<17;
         series<mod<MOD>> s = vector<mod<MOD>>{1,1};
-        //auto e = s.power(sz,1e9 + 7);
-        auto e = s.power(sz,10);
-        cerr << "comb(10,*): "; forn(i,32) cerr << e.a[i] << ' '; cerr << endl;
+        auto l = s.power(sz,1e9 + 7);
+        //auto l = s.exp(sz);
+        cerr << "log: "; forn(i,32) cerr << l.a[i] << ' '; cerr << endl;
 
-        auto e2 = e.inverse(sz);
-        cerr << "e2: "; forn(i,32) cerr << e2.a[i] << ' '; cerr << endl;
+        //auto e = s.power(sz,10);
+        //cerr << "comb(10,*): "; forn(i,32) cerr << e.a[i] << ' '; cerr << endl;
 
-        auto square = e*e;
-        cerr << "square: "; forn(i,32) cerr << square.a[i] << ' '; cerr << endl;
+        //auto e2 = e.inverse(sz);
+        //cerr << "e2: "; forn(i,32) cerr << e2.a[i] << ' '; cerr << endl;
+
+        //auto square = e*e;
+        //cerr << "square: "; forn(i,32) cerr << square.a[i] << ' '; cerr << endl;
     }
 
     return 0;
