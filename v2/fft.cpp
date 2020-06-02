@@ -1,271 +1,407 @@
 #include <bits/stdc++.h>
 using namespace std;
-
-typedef complex<double> comp;
-typedef long long tint;
-
-#define forn(i,n) for (int i = 0; i < (int)(n); i++)
-#define forsn(i,a,b) for (int i = int(a); i < int(b); i++)
-#define dforsn(i,a,b) for (int i = int(b-1); i >= int(a); i--)
-
+ 
+#define forn(i,n) for(int i=0;i<(int)(n);i++)
 #define si(c) ((int)(c).size())
+#define forsn(i,s,n) for(int i = (int)(s); i<((int)n); i++)
+#define dforsn(i,s,n) for(int i = (int)(n)-1; i>=((int)s); i--)
+#define all(c) (c).begin(), (c).end()
+#define D(a) cerr << #a << "=" << a << endl;
 #define pb push_back
+#define eb emplace_back
+#define mp make_pair
+ 
+typedef long long int ll;
+typedef vector<int> vi;
+typedef pair<int,int> pii;
+
+template<int N>
+struct mod {
+    static const int MOD = N;
+
+    // For MOD = 998244353, root = 3 works
+    static const int root = 3;
+
+    int value;
+
+    mod(ll value=0) {
+        this->value = value % MOD;
+        if (this->value < 0) value += MOD;
+    }
+
+    bool operator==(const mod &o) const { return value == o.value; }
+    bool operator!=(const mod &o) const { return value != o.value; }
+
+
+    mod &operator+=(const mod &o) {
+        value += o.value;
+        if (value >= MOD) value -= MOD;
+        return *this;
+    }
+
+    friend mod operator+(mod a, const mod &b) {
+        return a += b;
+    }
+
+    mod &operator-=(const mod &o) {
+        value -= o.value;
+        if (value < 0) value += MOD;
+        return *this;
+    }
+
+    friend mod operator-(mod a, const mod &b) {
+        return a -= b;
+    }
+
+    mod &operator*=(const mod &o) {
+        value = (ll) value * o.value % MOD;
+        return *this;
+    }
+
+    friend mod operator*(mod a, const mod &b) {
+        return a *= b;
+    }
+
+    int _inv(int a, int m) const {
+        if (a <= 1) return a; 
+        auto k = -_inv(m%a,a);
+        if (k < 0) k += a;
+        return ((ll)m*k+1) / a;
+    }
+
+    mod inverse() const {
+        return (mod) {_inv(value, MOD)};
+    }
+
+    mod &operator/=(const mod &o) {
+        return (*this) *= o.inverse();
+    }
+
+    friend mod operator/(mod a, const mod &b) {
+        return a /= b;
+    }
+
+    mod operator^(ll e) {
+        mod ans = 1, a = *this;
+        while (e > 0) {
+            if (e&1) ans *= a;
+            e /= 2;
+            a *= a;
+        }
+        return ans;
+    }
+
+    friend ostream &operator<<(ostream &out, mod m) {
+        out << m.value;
+        return out;
+    }
+};
+
+namespace fft {
+    template<class T>
+    vector<T> fft(vector<T> a, T w, bool inv) {
+        int n = si(a);
+        int k = 0; while ((1<<k) < n) k++;
+        assert ((1<<k) == n);
+
+        vector<int> rev(n);
+        rev[0] = 0; forsn(i,1,n) rev[i] = (rev[i>>1]>>1) | ((i&1) << (k-1));
+        forn(i,n) if (rev[i] < i) swap(a[i], a[rev[i]]);
+
+        vector<T> r(k);
+        if (inv) w = T(1) / w;
+        r[k-1] = w;
+        dforsn(i,0,k-1) r[i] = r[i+1]*r[i+1];
+
+        forn(l,k) {
+            int step = 1<<l;
+            for (int i = 0; i < n; i += 2*step) {
+                T ri = 1;
+                for (int j = i; j < i+step; j++) {
+                    T t = ri * a[j+step];
+                    a[j+step] = a[j] - t;
+                    a[j] += t;
+                    ri *= r[l];
+                }
+            }
+        }
+        if (inv) {
+            T invn = T(1) / T(n);
+            forn(i,n) a[i] *= invn;
+        }
+        return a;
+    }
+
+    template<class T>
+    vector<T> _mult(vector<T> a, vector<T> b, T w) {
+        auto ta = fft(a, w, 0);
+        auto tb = fft(b, w, 0);
+        vector<T> tc(si(a));
+        forn(i,si(a)) tc[i] = ta[i] * tb[i];
+        auto c = fft(tc, w, 1);
+        return c;
+    }
+
+    typedef complex<double> comp;
+    vector<comp> multiply(vector<comp> a, vector<comp> b) {
+        int n = si(a), m = si(b);
+        int sz = 1; while (sz < n+m) sz *= 2;
+        a.resize(sz); b.resize(sz);
+        auto w = exp(comp(0,2*M_PI/sz));
+        return _mult(a,b,w);
+    }
+
+    template<class M>
+    vector<M> multiply(vector<M> a, vector<M> b) {
+        int n = si(a), m = si(b);
+        int sz = 1; while (sz < n+m) sz *= 2;
+        a.resize(sz); b.resize(sz);
+        auto w = M(M::root) ^ (M::MOD / sz);
+        return _mult(a,b,w);
+    }
+}
 
 template<class T>
-ostream& operator<<(ostream &out, vector<T> v) { for (T x: v) out << fixed << setprecision(8) << x << ' '; return out; }
+struct series {
 
-void pad(vector<comp> &a) {
-	int n = si(a);
-	while (n & (n-1)) n += n & (-n);
-	a.resize(n,0);
-}
+    vector<T> a;
 
-vector<comp> fft(const vector<comp> &a, bool inv) {
-	int n = si(a);
-	if (n == 1) return a;
+    series(T a0=0) {
+        a = vector<T>{a0};
+    }
 
-	vector<comp> ae, ao;
-	forn(i,n) if (i & 1) ao.pb(a[i]); else ae.pb(a[i]);
-	vector<comp> c = fft(ae, inv), d = fft(ao, inv);
+    series(const vector<T> a): a(a) {}
 
-	vector<comp> res(n);
-	comp ri = 1;
-	comp r = exp(comp(0,-2*M_PI / n));
-	if (inv) r = conj(r);
-	n /= 2;
-	forn(i,n) {
-		comp val = ri*d[i];
-		res[i] = c[i] + val;
-		res[n+i] = c[i] - val;
-		ri *= r;
-	}
-	if (inv) forn(i,2*n) res[i] /= 2;
-	return res;
-}
+    series cap(int n) {
+        series ans = *this;
+        if (si(ans.a) > n) ans.a.resize(n);
+        return ans;
+    }
 
-inline int binv(int x, int k) {
-	int res = 0;
-	forn(_,k) {
-		res = (res << 1) | (x & 1);
-		x >>= 1;
-	}
-	return res;
-}
+    friend series operator+(const series &p, const series &q) {
+        int n = max(si(p.a), si(q.a));
+        vector<T> ans(n);
+        forn(i,n) {
+            if (i < si(p.a)) ans[i] += p.a[i];
+            if (i < si(q.a)) ans[i] += q.a[i];
+        }
+        return series(ans);
+    }
 
-vector<comp> fft2(const vector<comp> &a, bool inv) {
-	int n = si(a);
-	int k = 0; while ((1<<k) < n) k++;
-	vector<comp> b(n);
-	forn(i,n) b[i] = a[binv(i,k)];
+    friend series operator-(const series &p, const series &q) {
+        int n = max(si(p.a), si(q.a));
+        vector<T> ans(n);
+        forn(i,n) {
+            if (i < si(p.a)) ans[i] += p.a[i];
+            if (i < si(q.a)) ans[i] -= q.a[i];
+        }
+        return series(ans);
+    }
 
-	for (int step = 1; step < n; step *= 2) {
-		comp r = exp(comp(0,-2*M_PI / (2*step)));
-		if (inv) r = conj(r);
-		for (int i = 0; i < n; i += 2*step) {
-			comp ri = 1;
-			for (int j = i; j < i+step; j++) {
-				comp val = ri*b[j+step];
-				b[j+step] = b[j] - val;
-				b[j] = b[j] + val;
-				ri *= r;
-			}
-		}
-	}
-	if (inv) forn(i,n) b[i] /= n;
-	return b;
-}
+    series &operator*=(const series &o) {
+        a = fft::multiply(a,o.a);
+        return *this;
+    }
 
-template<class C, class T>
-void FFT(C &a, T root, bool inv) {
-	int n = si(a);
-	int k = 0; while ((1<<k) < n) k++;
-	assert ((1<<k) == n);
+    friend series operator*(series p, const series &q) {
+        return p *= q;
+    }
 
-	int *rev = new int[n];
-	rev[0] = 0; forsn(i,1,n) rev[i] = (rev[i>>1]>>1) | ((i&1) << (k-1));
-	forn(i,n) if (rev[i] < i) swap(a[i], a[rev[i]]);
+    friend series operator*(T k, series p) {
+        forn(i,si(p.a)) p.a[i] *= k;
+        return p;
+    }
 
-	// static T r[k];
-	T *r = new T[k];
-	if (inv) root = T(1)/root;
-	r[k-1] = root;
-	dforsn(i,0,k-1) r[i] = r[i+1]*r[i+1];
-	
-	forn(l,k) {
-		int step = 1<<l;
-		for (int i = 0; i < n; i += 2*step) {
-			T ri = 1;
-			for (int j = i; j < i+step; j++) {
-				T val = ri * a[j+step];
-				a[j+step] = a[j] - val;
-				a[j] += val;
-				ri *= r[l];
-			}
-		}
-	}
-	if (inv) forn(i,n) a[i] /= T(n);
-	delete[] rev;
-	delete[] r;
+    series derivative() {
+        series ans;
+        ans.a.resize(si(a)-1);
+        for (int i = 1; i < si(a); i++) {
+            ans.a[i-1] = T(i) * a[i];
+        }
+        return ans;
+    }
 
-}
+    series integral() {
+        series ans;
+        ans.a.resize(si(a)+1);
+        forn(i,si(a)) ans.a[i+1] = a[i] / T(i+1);
+        return ans;
+    }
 
-// template<class C, class T>
-// C DFT(C &a, T root, bool inv) {
-// 	int n = si(a);
-	
-// 	static T b[n];
-// 	if (inv) root = T(1) / root;
-// 	T r = 1;
-// 	forn(i,n) {
-// 		b[i] = 0;
-// 		dforsn(j,0,n) b[i] = b[i]*r + a[j];
-// 		r *= root;
-// 	}
-// 	if (inv) forn(i,n) b[i] /= T(n);
-// 	forn(i,n) a[i] = b[i];
-// }
+    series inverse(int n) {
+        int sz = 0;
+        series a_cap, ans = T(1) / a[0];
+        a_cap.a.clear();
+        for (int k = 1; sz < n; k++) {
+            a_cap.a.reserve(sz);
+            while (sz < (1<<k)) {
+                if (sz < si(a)) 
+                    a_cap.a.pb(a[sz]);
+                sz++;
+            }
+            ans *= series(2) - (a_cap * ans).cap(sz);
+            while (si(ans.a) > sz) ans.a.pop_back();
+        }
+        return ans;
+    }
 
-tint expomod(tint x, tint e, tint m) {
-	tint res = 1;
-	while (e) {
-		if (e&1) res = res*x%m;
-		e >>= 1;
-		x = x*x%m;
-	}
-	return res;
-}
+    series sqrt(int n, T b0) {
+        int sz = 0;
+        series a_cap, ans = b0;
+        a_cap.a.clear();
+        for (int k = 1; si(ans.a) < n; k++) {
+            while (sz < (1<<k)) {
+                if (sz < si(a)) 
+                    a_cap.a.pb(a[sz]);
+                sz++;
+            }
+            ans = (ans*ans + a_cap) * (2*ans).inverse(sz);
+            while (si(ans.a) > sz) ans.a.pop_back();
+        }
+        return ans;
+    }
 
-/***********************************************************
-K|Menor primo de la forma (2**K * impar) + 1
-0 2
-1 3
-2 5
-3 41
-4 17
-5 97
-6 193
-7 641
-8 257
-9 7681
-10 13313
-11 18433
-12 12289
-13 40961
-14 114689
-15 163841
-16 65537
-17 1179649
-18 786433
-19 5767169
-20 7340033
-21 23068673
-22 104857601
-23 377487361
-24 754974721
-25 167772161
-26 469762049
-27 2013265921
-28 3489660929
-29 12348030977
-30 3221225473
-31 75161927681
-32 184683593729
-33 77309411329
-34 1288490188801
-35 2027224563713
-36 206158430209
-37 2061584302081
-38 4123168604161
-39 2748779069441
-40 29686813949953
-41 6597069766657
-42 39582418599937
-43 79164837199873
-44 263882790666241
-45 1231453023109121
-46 1337006139375617
-47 3799912185593857
-48 4222124650659841
-49 12947848928690177
-50 7881299347898369
-51 38280596832649217
-52 31525197391593473
-53 459367161991790593
-54 882705526964617217
-55 180143985094819841
-56 1945555039024054273
-57 4179340454199820289
-58 28534807239019462657
-59 15564440312192434177
-60 35740566642812256257
-61 122209679488325779457
-62 484227031934875729921
-63 83010348331692982273
-64 461168601842738790401
-***********************************************************/
+    // a[0] should be 1
+    series log(int n) {
+        auto ans = (this->derivative() * this->inverse(n)).integral();
+        while (si(ans.a) > n) ans.a.pop_back();
+        return ans;
+    }
 
-// Number-theoretic transform
-// R = n-th primitive root module MOD (where n is si(a)) 
-// MOD = prime module
-vector<tint> fft3(const vector<tint> &a, bool inv, tint R, tint MOD) {
-	int n = si(a);
-	int k = 0; while ((1<<k) < n) k++;
-	vector<tint> b(n);
-	forn(i,n) b[i] = a[binv(i,k)];
+    // a[0] should be 0
+    series exp(int n) {
+        int sz = 0;
+        series a_cap, ans = T(1);
+        a_cap.a.clear();
+        for (int k = 1; sz < n; k++) {
+            while (sz < (1<<k)) {
+                if (sz < si(a)) 
+                    a_cap.a.pb(a[sz]);
+                sz++;
+            }
+            ans = ans * (series(1) + a_cap - ans.log(sz));
+            while (si(ans.a) > sz) ans.a.pop_back();
+        }
+        return ans;
+    }
 
-	for (int step = 1; step < n; step *= 2) {
-		// comp r = exp(comp(0,-2*M_PI / (2*step)));
-		tint r = expomod(R,n/2/step,MOD);
-		if (inv) r = expomod(r, MOD-2, MOD);
-		for (int i = 0; i < n; i += 2*step) {
-			tint ri = 1;
-			for (int j = i; j < i+step; j++) {
-				tint val = ri*b[j+step]%MOD;
-				b[j+step] = (b[j] - val + MOD) % MOD;
-				b[j] = (b[j] + val) % MOD;
-				ri = ri*r%MOD;
-			}
-		}
-	}
-	tint invn = expomod(n,MOD-2,MOD);
-	if (inv) forn(i,n) b[i] = b[i]*invn%MOD;
-	return b;
-}
+    // compute a^k modulo x^n
+    // a[0] should be != 0
+    series power(int n, ll k) {
+        series ans = *this;
+        auto a0 = ans.a[0];
+        auto inv_a0 = T(1) / a0;
+        forn(i,si(ans.a)) 
+            ans.a[i] *= inv_a0;
+        return (a0^k) * (k * ans.log(n)).exp(n);
+    }
 
-vector<tint> covolve(const vector<tint> &a, const vector<tint> &b, tint R, tint MOD) {
-	int n = si(a);
-	vector<tint> fa = fft3(a,false,R,MOD), fb = fft3(b,false,R,MOD);
-	forn(i,n) fa[i] = fa[i]*fb[i]%MOD;
-	return fft3(fa,true,R,MOD);
-}
+    friend ostream &operator<<(ostream &out, const series &s) {
+        for (auto x : s.a) out << x << ' ';
+        return out;
+    }
+};
 
-vector<comp> covolve(const vector<comp> &a, const vector<comp> &b) {
-	int n = si(a);
-	vector<comp> fa = fft2(a,false), fb = fft2(b,false);
-	forn(i,n) fa[i] *= fb[i];
-	return fft2(fa,true);
-}
+const int MOD = 998244353; 
 
 int main() {
-	vector<tint> a = {2,3,10,12,0,0,0,0}, b = {0,17,4,15,0,0,0,0};
-	vector<complex<double>> ad(a.begin(), a.end());
+    ios_base::sync_with_stdio(0); cin.tie(0);
 
-	cout << ad << endl;
-	cout << fft2(ad, false) << endl;
-	FFT(ad, exp(complex<double>(0,-2*M_PI/si(a))), false);
-	cout << ad << endl;
+    vi a = {1,5,7,-1,5};
+    vi b = {4,7,17};
+    a = b;
+    a = {1,-1};
+    vi c(si(a)+si(b));
+    forn(i,si(a)) forn(j,si(b)) c[i+j] += a[i]*b[j];
+    for (auto x : c) cerr << real(x) << ' '; cerr << endl;
 
-	return 0;
+    {
+        vector<fft::comp> at, bt;
+        for (auto x : a) at.eb(x);
+        for (auto y : b) bt.eb(y);
+        auto c = fft::multiply(at,bt);
+        for (auto x : c) cerr << real(x) << ' '; cerr << endl;
+    }
 
+    {
+        int sz = 32;
+        vector<mod<MOD>> pt = {1,-4};
+        auto ps = series(pt);
+        //auto catalan = 2 * (series(mod<MOD>(1)) + ps.sqrt(sz,1)).inverse(sz);
+        auto catalan = series(mod<MOD>(2)).inverse(sz) * (series(mod<MOD>(1)) - ps.sqrt(sz,1));
+        cerr << "catalan: "; forn(i,sz) cerr << catalan.a[i] << ' '; cerr << endl;
+        //auto s = 2 * (series(1) + series(vector<mod<MOD>>{1,-4}).sqrt(32,1)).inverse();
+    }
 
+    {
+        vector<mod<MOD>> at, bt;
+        for (auto x : a) at.eb(x);
+        for (auto y : b) bt.eb(y);
+        auto c = fft::multiply(at,bt);
+        for (auto x : c) cerr << x.value << ' '; cerr << endl;
 
-	vector<tint> c(8,0);
-	forn(i,8) forn(j,8) if (i+j < 8) {
-		c[i+j] += a[i]*b[j];
-	}
-	cout << c << endl;
+        auto as = series(at);
+        cerr << "a: "; forn(i,si(as.a)) cerr << as.a[i] << ' '; cerr << endl;
 
-	tint R = 996173970, MOD = 998244353;	
-	cout << covolve(a,b,expomod(R,1<<15,MOD),MOD);
+        int sz = 32;
+        auto inv = as.inverse(sz);
+        auto root = as.sqrt(sz, 1);
+        {
+            vi check(sz);
+            cerr << "root: "; forn(i,sz) cerr << root.a[i] << ' '; cerr << endl;
+            forn(i,si(root.a)) forn(j,si(root.a)) {
+                if (i+j < sz){ 
+                    check[i+j] += (ll) root.a[i].value * root.a[j].value % MOD;
+                    if (check[i+j] >= MOD) check[i+j] -= MOD;
+                }
+            }
+            cerr << "check: "; forn(i,sz) cerr << check[i] << ' '; cerr << endl;
+        }
 
+        {
+            cerr << "inv: "; forn(i,sz) cerr << inv.a[i] << ' '; cerr << endl;
+            vi check(sz);
+            forn(i,si(a)) forn(j,si(inv.a)) {
+                if (i+j < sz) {
+                    check[i+j] += (ll) a[i] * inv.a[j].value % MOD;
+                    if (check[i+j] >= MOD) check[i+j] -= MOD;
+                }
+            }
+            cerr << "check: "; forn(i,sz) cerr << check[i] << ' '; cerr << endl;
+        }
+    }
+    {
+        int sz = 32;
+        vector<fft::comp> a = {1,-1};
+        auto s = series(a);
+        auto l = s.inverse(sz).log(sz);
+        cerr << "log: "; forn(i,sz) cerr << real(l.a[i])*i << ' '; cerr << endl;
+
+    }
+    if (false) {
+        int sz = 32;
+        vector<mod<MOD>> fact(sz);
+        fact[0] = 1;
+        forsn(n,1,sz) fact[n] = fact[n-1] * n;
+
+        vector<mod<MOD>> a = {0,1};
+        auto s = series(a);
+        auto e = (s.exp(sz) - series(mod<MOD>(1))).exp(sz);
+        cerr << "e^x: "; forn(i,sz) cerr << e.a[i]*fact[i] << ' '; cerr << endl;
+    }
+    {
+        int sz = 1<<17;
+        series<mod<MOD>> s = vector<mod<MOD>>{1,1};
+        //auto e = s.power(sz,1e9 + 7);
+        auto e = s.power(sz,10);
+        cerr << "comb(10,*): "; forn(i,32) cerr << e.a[i] << ' '; cerr << endl;
+
+        auto e2 = e.inverse(sz);
+        cerr << "e2: "; forn(i,32) cerr << e2.a[i] << ' '; cerr << endl;
+
+        auto square = e*e;
+        cerr << "square: "; forn(i,32) cerr << square.a[i] << ' '; cerr << endl;
+    }
+
+    return 0;
 }
