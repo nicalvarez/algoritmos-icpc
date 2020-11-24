@@ -112,6 +112,21 @@ struct segment_tree_lazy {
         update(root, 0, n, a, b, mod);
     }
 
+    void update_pos(node *u, int from, int to, int pos, Mod mod) {
+        if (from+1 == to) {
+            u->val = mod * u->val;
+            return;
+        }
+        int mid = (from + to) / 2;
+        if (pos < mid) update_pos(u->left, from, mid, pos, mod);
+        else update_pos(u->right, mid, to, pos, mod);
+        u->pull();
+    }
+
+    void update_pos(int pos, Mod mod) {
+        update_pos(root, 0, n, pos, mod);
+    }
+
     Val get(node *u, int from, int to, int a, int b, Mod mod) {
         if (to <= a || b <= from) return Val();
         if (a <= from && to <= b) return mod * u->eval();
