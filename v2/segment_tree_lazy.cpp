@@ -79,7 +79,7 @@ struct segment_tree_lazy {
     int n;
     node *root;
 
-    segment_tree_lazy(int n) {
+    segment_tree_lazy(int n=0) {
         segment_tree_lazy(vector<Val>(n));
     }
 
@@ -89,6 +89,7 @@ struct segment_tree_lazy {
     }
 
     node* build(int from, int to, const vector<Val> &a) {
+        if (from >= to) return nullptr;
         if (from+1 == to) return new node({a[from], Mod(), nullptr, nullptr});
         auto ans = new node();
         int mid = (from+to) / 2;
@@ -112,19 +113,19 @@ struct segment_tree_lazy {
         update(root, 0, n, a, b, mod);
     }
 
-    void update_pos(node *u, int from, int to, int pos, Mod mod) {
+    void update_pos(node *u, int from, int to, int pos, Val val) {
         if (from+1 == to) {
-            u->val = mod * u->val;
+            u->val = val;
             return;
         }
         int mid = (from + to) / 2;
-        if (pos < mid) update_pos(u->left, from, mid, pos, mod);
-        else update_pos(u->right, mid, to, pos, mod);
+        if (pos < mid) update_pos(u->left, from, mid, pos, val);
+        else update_pos(u->right, mid, to, pos, val);
         u->pull();
     }
 
-    void update_pos(int pos, Mod mod) {
-        update_pos(root, 0, n, pos, mod);
+    void update_pos(int pos, Val val) {
+        update_pos(root, 0, n, pos, val);
     }
 
     Val get(node *u, int from, int to, int a, int b, Mod mod) {
@@ -140,10 +141,11 @@ struct segment_tree_lazy {
     }
 
     template<class Cond>
-    int lower_bound(node *u, int from, int to, Val prefix, Mod mod, Cond cond) {
+    tuple<int,Val,Val> lower_bound(node *u, int from, int to, Val prefix, Mod mod, Cond cond) {
         if (from+1 == to) {
-            if (cond(prefix + mod*u->eval())) return from;
-            else return to;
+            auto cand = prefix + mod*u->eval();
+            if (cond(cand)) return {from, prefix, cand};
+            else return {to, cand, cand};
         }
 
         int mid = (from + to) / 2;
@@ -158,7 +160,7 @@ struct segment_tree_lazy {
     }
 
     template<class Cond>
-    int lower_bound(Cond cond) {
+    tuple<int,Val,Val> lower_bound(Cond cond) {
         return lower_bound(root, 0, n, Val(), Mod(), cond);
     }
 
