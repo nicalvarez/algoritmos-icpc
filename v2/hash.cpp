@@ -14,51 +14,47 @@ using namespace std;
 typedef long long int ll;
 typedef vector<int> vi;
 typedef pair<int,int> pii;
+mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
 
-mt19937 rng;
-#define hash __nico_hash
-struct hashing {
-    int mod, mul;
+template<int K>
+struct string_hashing {
 
-    bool prime(int n) { 
+    int n, MOD, x[K];
+    vi pot[K], cum[K];
+
+    bool prime(int n) {
         for (int d = 2; d*d <= n; d++) if (n%d == 0) return false;
         return true;
     }
 
-    void setValues(int mod, int mul) {
-        this->mod = mod;
-        this->mul = mul;
+    string_hashing(const string &s) {
+        MOD = 1e9 + rng() % int(1e9);
+        while (!prime(MOD)) ++MOD;
+        forn(i, K) x[i] = rng() % MOD;
+
+        n = si(s);
+        forn(i, K) {
+            pot[i].resize(n+1);
+            cum[i].resize(n+1);
+            pot[i][0] = 1;
+            cum[i][0] = 0;
+            forsn(j, 1, n+1) {
+                pot[i][j] = (ll) pot[i][j-1] * x[i] % MOD;
+                cum[i][j] = ( (ll) cum[i][j-1] * x[i] + s[j-1] ) % MOD;
+            }
+        }
     }
 
-    void randomize() {
-        rng.seed(time(0));
-        mod = uniform_int_distribution<>(0, (int) 5e8)(rng) + 1e9;
-        while (!prime(mod)) mod++;
-        mul = uniform_int_distribution<>(2,mod-2)(rng);
+    array<int, K> hash(int from, int to) {
+        array<int,K> ans;
+        assert(0 <= from && to <= n);
+        forn(i, K) {
+            ans[i] = (cum[i][to] - (ll) cum[i][from] * pot[i][to-from]) % MOD;
+            if (ans[i] < 0) ans[i] += MOD;
+        }
+        return ans;
     }
-
-    vi h, pot;
-    void process(const string &s) {
-        h.resize(si(s)+1);
-        pot.resize(si(s)+1);
-        h[0] = 0; forn(i,si(s)) h[i+1] = (((ll)h[i] * mul) + s[i]) % mod;
-        pot[0] = 1; forn(i,si(s)) pot[i+1] = (ll) pot[i] * mul % mod;
-    }
-
-    int hash(int i, int j) {
-        int res = h[j] - (ll) h[i] * pot[j-i] % mod;
-        if (res < 0) res += mod;
-        return res;
-    }
-
-    int hash(const string &s) {
-        int res = 0;
-        for (char c : s) res = (res * (ll) mul + c) % mod;
-        return res;
-    }
-
+    
 };
-
-hashing h1,h2;
 
 int main() { }
