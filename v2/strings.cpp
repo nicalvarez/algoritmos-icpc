@@ -8,7 +8,8 @@ using namespace std;
 typedef vector<int> vi;
 typedef vector<vi> vvi;
 
-vector<int> z_function (const string &s) {
+template<class T>
+vi z_function (const T &s) {
 	int n = (int) s.length();
 	vector<int> z (n);
 	for (int i=1, l=0, r=0; i<n; ++i) {
@@ -19,17 +20,20 @@ vector<int> z_function (const string &s) {
 	return z;
 }
 
-vector<int> prefix_function (string s) {
-	int n = (int) s.length();
-	vector<int> pi (n);
-	for (int i=1; i<n; ++i) {
-		int j = pi[i-1];
-		while (j > 0 && s[i] != s[j]) j = pi[j-1];
-		if (s[i] == s[j])  ++j;
-		pi[i] = j;
-	}
-	return pi;
+template<class T>
+vi prefix_function(const T &s) {
+    int n = si(s);
+    vi pi(n+1);
+    pi[0] = -1;
+    for (int i = 1; i <= n; i++) {
+        int &p = pi[i];
+        p = pi[i-1];
+        while (p != -1 && s[p] != s[i-1]) p = pi[p];
+        ++p;
+    }
+    return pi;
 }
+
 
 vi kmp(const string &p, const string &t) {
     string s = p + "#" + t;
@@ -60,3 +64,5 @@ namespace automata {
         return aut;
     }
 }
+
+int main() {}
