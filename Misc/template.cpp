@@ -14,7 +14,7 @@ using namespace std;
 typedef long long int ll;
 typedef vector<int> vi;
 typedef pair<int,int> pii;
-
+mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 int main() {
     ios_base::sync_with_stdio(0); cin.tie(0);
