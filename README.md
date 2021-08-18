@@ -18,5 +18,10 @@ I hope you can find something useful in this lines of codes.
 * Deduplicate functionality
 * Make cleaner code if possible
 
+*PENDING IMPLEMENTATIONS*
+* Hungarian algorithm
+* Link-cut tree
+* Geo: Line + Circle 
+
 If you are interested in collaborating, just make a pull request.
 Or just send a message.
