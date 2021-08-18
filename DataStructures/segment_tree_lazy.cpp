@@ -79,9 +79,7 @@ struct segment_tree_lazy {
     int n;
     node *root;
 
-    segment_tree_lazy(int n=0) {
-        segment_tree_lazy(vector<Val>(n));
-    }
+    segment_tree_lazy(int n=0): segment_tree_lazy(vector<Val>(n)) { }
 
     segment_tree_lazy(const vector<Val> &a) {
         n = si(a);

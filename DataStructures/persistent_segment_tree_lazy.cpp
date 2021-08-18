@@ -73,9 +73,7 @@ struct persistent_segment_tree_lazy {
     int n;
     node *root;
 
-    persistent_segment_tree_lazy(int n=0) {
-        persistent_segment_tree_lazy(vector<Val>(n));
-    }
+    persistent_segment_tree_lazy(int n=0): persistent_segment_tree_lazy(vector<Val>(n)) {}
 
     persistent_segment_tree_lazy(const vector<Val> &a) {
         n = si(a);
